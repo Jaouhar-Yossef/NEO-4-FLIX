@@ -1,0 +1,41 @@
+# Maven
+**/target/
+**/.mvn/wrapper/maven-wrapper.jar
+*.class
+
+# Java
+*.log
+hs_err_pid*
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+.project
+.classpath
+.settings/
+
+# Operating system
+.DS_Store
+Thumbs.db
+
+# Node.js / Angular
+node_modules/
+dist/
+.angular/
+coverage/
+npm-debug.log*
+
+# Test reports
+surefire-reports/
+failsafe-reports/
+
+# Temporary files
+*.tmp
+*.swp
+*.bak

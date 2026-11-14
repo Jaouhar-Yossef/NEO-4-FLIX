@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: api-gateway
+  profiles:
+    default: dev
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: api-gateway
+    description: Neo4flix API Gateway
+    version: 1.0.0
