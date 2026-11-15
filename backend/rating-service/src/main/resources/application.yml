@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: rating-service
+  profiles:
+    default: dev
+  neo4j:
+    uri: ${NEO4J_URI:bolt://localhost:7687}
+    authentication:
+      username: ${NEO4J_USERNAME:neo4j}
+      password: ${NEO4J_PASSWORD:change_me}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: rating-service
+    description: Neo4flix Rating Management Service
+    version: 1.0.0

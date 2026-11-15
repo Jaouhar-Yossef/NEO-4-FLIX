@@ -1,0 +1,7 @@
+server:
+  port: 8182
+
+logging:
+  level:
+    root: INFO
+    com.neo4flix: DEBUG
