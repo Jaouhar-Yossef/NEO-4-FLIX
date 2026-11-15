@@ -5,3 +5,8 @@ logging:
   level:
     root: INFO
     com.neo4flix: DEBUG
+    
+management:
+  endpoint:
+    health:
+      show-details: always
