@@ -23,3 +23,10 @@ body {
 a { color: inherit; }
 img { max-width: 100%; display: block; }
 button, input, select { font: inherit; }
+
+.auth-card { max-width: 420px; margin: 2rem auto; padding: 1.5rem; border: 1px solid #ddd; border-radius: 8px; }
+.auth-card form { display: flex; flex-direction: column; gap: 0.75rem; }
+.auth-card label { display: flex; flex-direction: column; gap: 0.25rem; }
+.auth-card .error, .rules { color: #b00020; }
+.auth-card .notice, .rules .ok { color: #1b5e20; }
+.rules { list-style: none; padding: 0; }
