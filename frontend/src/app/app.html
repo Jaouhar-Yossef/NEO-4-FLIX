@@ -1,0 +1,20 @@
+<header class="topbar">
+  <a routerLink="/" class="brand">Neo4flix</a>
+  <nav>
+    @if (tokens.isLoggedIn()) {
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Movies</a>
+      <a routerLink="/recommendations" routerLinkActive="active">Recommendations</a>
+      <a routerLink="/my-ratings" routerLinkActive="active">My ratings</a>
+      <a routerLink="/watchlist" routerLinkActive="active">Watchlist</a>
+      <a routerLink="/shared-with-me" routerLinkActive="active">Shared with me</a>
+      <button type="button" (click)="logout()">Log out</button>
+    } @else {
+      <a routerLink="/login" routerLinkActive="active">Log in</a>
+      <a routerLink="/register" routerLinkActive="active">Register</a>
+    }
+  </nav>
+</header>
+
+<main class="content">
+  <router-outlet />
+</main>
