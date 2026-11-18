@@ -1,0 +1,31 @@
+<section class="auth-card">
+  <h1>Two-factor authentication</h1>
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+
+  @if (done()) {
+    <p class="notice">2FA is on. Next time you log in you'll be asked for a code.</p>
+    <a routerLink="/">Back to movies</a>
+  } @else if (secret()) {
+    <p>1. In your authenticator app (Google Authenticator, Authy…), choose <b>Enter a setup key</b>,
+      name it <b>Neo4flix</b>, pick <b>Time-based</b>, and enter this key:</p>
+    <p><code>{{ secret() }}</code></p>
+
+    <form [formGroup]="codeForm" (ngSubmit)="confirm()">
+      <label>
+        2. Enter the 6-digit code it shows
+        <input formControlName="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" />
+      </label>
+      @if (codeForm.controls.code.touched && codeForm.controls.code.invalid) {
+        <small class="error">The code is 6 digits.</small>
+      }
+      <button type="submit" [disabled]="loading()">
+        {{ loading() ? 'Checking…' : 'Turn on 2FA' }}
+      </button>
+    </form>
+  } @else if (!error()) {
+    <p>Loading…</p>
+  }
+</section>
