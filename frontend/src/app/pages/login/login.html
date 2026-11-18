@@ -1,1 +1,50 @@
-<p>login works!</p>
+<section class="auth-card">
+  <h1>Log in</h1>
+
+  @if (registered()) {
+    <p class="notice">Account created. You can log in now.</p>
+  }
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+
+  @if (step() === 'credentials') {
+    <form [formGroup]="credentialsForm" (ngSubmit)="submitCredentials()">
+      <label>
+        Email
+        <input type="email" formControlName="email" autocomplete="email" />
+      </label>
+      @if (credentialsForm.controls.email.touched && credentialsForm.controls.email.invalid) {
+        <small class="error">Enter a valid email.</small>
+      }
+
+      <label>
+        Password
+        <input type="password" formControlName="password" autocomplete="current-password" />
+      </label>
+      @if (credentialsForm.controls.password.touched && credentialsForm.controls.password.invalid) {
+        <small class="error">Enter your password.</small>
+      }
+
+      <button type="submit" [disabled]="loading()">
+        {{ loading() ? 'Logging in…' : 'Log in' }}
+      </button>
+    </form>
+    <p>No account? <a routerLink="/register">Register</a></p>
+  } @else {
+    <form [formGroup]="codeForm" (ngSubmit)="submitCode()">
+      <p>Enter the 6-digit code from your authenticator app.</p>
+      <label>
+        Code
+        <input formControlName="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" />
+      </label>
+      @if (codeForm.controls.code.touched && codeForm.controls.code.invalid) {
+        <small class="error">The code is 6 digits.</small>
+      }
+
+      <button type="submit" [disabled]="loading()">
+        {{ loading() ? 'Checking…' : 'Verify' }}
+      </button>
+    </form>
+  }
+</section>

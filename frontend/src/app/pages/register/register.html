@@ -1,1 +1,43 @@
-<p>register works!</p>
+<section class="auth-card">
+  <h1>Create an account</h1>
+
+  @if (error()) {
+  <p class="error" role="alert">{{ error() }}</p>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <label>
+      Email
+      <input type="email" formControlName="email" autocomplete="email" />
+    </label>
+    @if (form.controls.email.touched && form.controls.email.invalid) {
+    <small class="error">Enter a valid email.</small>
+    }
+
+    <label>
+      Display name
+      <input formControlName="displayName" autocomplete="nickname" />
+    </label>
+    @if (form.controls.displayName.touched && form.controls.displayName.invalid) {
+    <small class="error">Enter a name.</small>
+    }
+
+    <label>
+      Password
+      <input type="password" formControlName="password" autocomplete="new-password" />
+    </label>
+    @let password = form.controls.password;
+    @if (password.dirty || password.touched) {
+    <ul class="rules" aria-live="polite">
+      @for (rule of rules(); track rule.id) {
+      <li [class.ok]="rule.ok">{{ rule.ok ? '✓' : '✗' }} {{ rule.label }}</li>
+      }
+    </ul>
+    }
+
+    <button type="submit" [disabled]="loading()">
+      {{ loading() ? 'Creating…' : 'Register' }}
+    </button>
+  </form>
+  <p>Already have an account? <a routerLink="/login">Log in</a></p>
+</section>
