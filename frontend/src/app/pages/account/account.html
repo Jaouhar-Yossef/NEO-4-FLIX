@@ -1,0 +1,45 @@
+<section class="auth-card">
+  <h1>Account</h1>
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+
+  @if (profile(); as p) {
+    <p>Email: <b>{{ p.email }}</b></p>
+
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <label>
+        Display name
+        <input formControlName="displayName" autocomplete="nickname" maxlength="50" />
+      </label>
+      @if (form.controls.displayName.touched && form.controls.displayName.invalid) {
+        <small class="error">Enter a name (at most 50 characters).</small>
+      }
+      @if (saved()) {
+        <p class="notice">Saved.</p>
+      }
+      <button type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save' }}</button>
+    </form>
+
+    <h2>Two-factor authentication</h2>
+    @if (p.twoFactorEnabled) {
+      <p class="notice">2FA is on.</p>
+    } @else {
+      <p>2FA is off. <a routerLink="/account/2fa">Turn on 2FA</a></p>
+    }
+
+    <h2>Delete account</h2>
+    @if (confirmingDelete()) {
+      <p class="error">This deletes your account, your ratings, your watchlist and your friends. It can't be undone.</p>
+      <button type="button" (click)="deleteAccount()" [disabled]="deleting()">
+        {{ deleting() ? 'Deleting…' : 'Yes, delete my account' }}
+      </button>
+      <button type="button" (click)="confirmingDelete.set(false)" [disabled]="deleting()">Cancel</button>
+    } @else {
+      <button type="button" (click)="confirmingDelete.set(true)">Delete my account</button>
+    }
+  } @else if (!error()) {
+    <p>Loading…</p>
+  }
+</section>

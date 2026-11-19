@@ -49,7 +49,7 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, BAD_CREDENTIALS);
         }
         User user = users.findByEmail(normalize(req.email()))
-                .filter(u -> u.getPasswordHash() != null) 
+                .filter(u -> u.getPasswordHash() != null)
                 .filter(u -> passwordEncoder.matches(req.password(), u.getPasswordHash()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, BAD_CREDENTIALS));
 

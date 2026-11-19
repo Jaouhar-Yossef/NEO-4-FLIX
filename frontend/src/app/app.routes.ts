@@ -39,6 +39,10 @@ export const routes: Routes = [
           import('./pages/shared-with-me/shared-with-me').then((m) => m.SharedWithMe),
       },
       {
+        path: 'account',
+        loadComponent: () => import('./pages/account/account').then((m) => m.Account),
+      },
+      {
         path: 'account/2fa',
         loadComponent: () =>
           import('./pages/two-factor-setup/two-factor-setup').then((m) => m.TwoFactorSetup),

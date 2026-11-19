@@ -12,6 +12,11 @@ export const PASSWORD_RULES: readonly PasswordRule[] = [
   { id: 'lower', label: 'A lowercase letter', test: (v) => /[a-z]/.test(v) },
   { id: 'digit', label: 'A digit', test: (v) => /\d/.test(v) },
   { id: 'symbol', label: 'A symbol (not a letter or digit)', test: (v) => /[^A-Za-z0-9]/.test(v) },
+  {
+    id: 'maxBytes',
+    label: 'At most 72 bytes (accents and emoji count as 2 to 4)',
+    test: (v) => new TextEncoder().encode(v).length <= 72,
+  },
 ];
 
 export function failedPasswordRules(value: string): string[] {
