@@ -7,8 +7,8 @@ describe('password policy', () => {
     expect(failedPasswordRules('S3cure!pass')).toEqual([]);
   });
 
-  it('fails every rule for an empty string', () => {
-    expect(failedPasswordRules('')).toEqual(PASSWORD_RULES.map((r) => r.id));
+  it('fails every rule except the maximum for an empty string', () => {
+    expect(failedPasswordRules('')).toEqual(['length', 'upper', 'lower', 'digit', 'symbol']);
   });
 
   it.each([
@@ -17,8 +17,19 @@ describe('password policy', () => {
     ['S3CURE!PASS', 'lower'],
     ['Secure!pass', 'digit'],
     ['S3curepass', 'symbol'],
+    ['S3cure!' + 'a'.repeat(66), 'maxBytes'],
   ])('"%s" breaks only the %s rule', (password, ruleId) => {
     expect(failedPasswordRules(password)).toEqual([ruleId]);
+  });
+
+  it('accepts exactly 72 bytes', () => {
+    expect(failedPasswordRules('S3cure!' + 'a'.repeat(65))).toEqual([]);
+  });
+
+  it('counts bytes, not characters (é is 2 bytes in UTF-8)', () => {
+    const password = 'S3cure!' + 'é'.repeat(33); // 40 characters, 73 bytes
+    expect(password.length).toBe(40);
+    expect(failedPasswordRules(password)).toEqual(['maxBytes']);
   });
 });
 
@@ -37,7 +48,7 @@ describe('passwordPolicyValidator', () => {
 
   it('treats a null value as empty', () => {
     expect(validate(new FormControl(null))).toEqual({
-      passwordPolicy: PASSWORD_RULES.map((r) => r.id),
+      passwordPolicy: PASSWORD_RULES.map((r) => r.id).filter((id) => id !== 'maxBytes'),
     });
   });
 });
