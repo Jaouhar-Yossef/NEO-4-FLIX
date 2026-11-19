@@ -7,7 +7,7 @@ The gateway strips `/api` and forwards by prefix:
 
 | Prefix | Service |
 |---|---|
-| `/api/auth/**` | user-service (**new gateway route**) |
+| `/api/auth/**` | user-service |
 | `/api/users/**` | user-service |
 | `/api/movies/**` | movie-service |
 | `/api/ratings/**` | rating-service |
@@ -30,7 +30,7 @@ The gateway strips `/api` and forwards by prefix:
 **Errors.** Spring's built-in `ProblemDetail` (`application/problem+json`):
 
 ```json
-{ "status": 400, "title": "Bad Request", "detail": "password must contain a digit", "instance": "/api/auth/register" }
+{ "status": 400, "title": "Bad Request", "detail": "password must contain a digit", "instance": "/auth/register" }
 ```
 
 | Status | When |
@@ -75,7 +75,7 @@ Second login step when 2FA is on.
 ### POST `/api/auth/2fa/setup` — JWT
 Turns 2FA on, step 1. The backend creates a TOTP secret (authenticator app, e.g. Google
 Authenticator).
-→ `200` `{ "otpauthUri": "otpauth://totp/Neo4flix:alice@example.com?secret=…&issuer=Neo4flix" }`
+→ `200` `{ "otpauthUri": "otpauth://totp/alice%40example.com?secret=…&issuer=Neo4flix" }`
 The frontend shows the setup key for manual entry (no QR code, see NEO-10).
 Errors: `409` (2FA already on).
 
@@ -203,8 +203,9 @@ Compared with `docs/database/neo4j-graph-model.md`:
 | Section | Backend | Frontend |
 |---|---|---|
 | §2 Auth + 2FA | NEO-03 | NEO-10 |
-| `/api/auth` route + JWT check | NEO-07 | — |
-| §3 Profile, my ratings | NEO-03 | NEO-13 |
+| `/api/auth` gateway route | NEO-03 | — |
+| JWT check at the gateway | NEO-07 | — |
+| §3 Profile, my ratings | NEO-21 | NEO-21 |
 | §3 Watchlist, friends | NEO-20 | NEO-15 |
 | §4 Movies | NEO-04 | NEO-11, 12, 13 |
 | §5 Ratings | NEO-05 | NEO-13 |
