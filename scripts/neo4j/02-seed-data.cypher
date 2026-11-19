@@ -2,18 +2,27 @@
 // NEO-4-FLIX - Development Seed Data
 // ============================================
 
-// Users
+// Users (dev only). Password for all three: S3cure!pass
 MERGE (u1:User {id: 'user-001'})
 SET u1.email = 'alice@neo4flix.dev',
-    u1.displayName = 'Alice';
+    u1.displayName = 'Alice',
+    u1.passwordHash = '$2a$10$Wpz7U5TuZqleLIA16du82.Lo4HwajwkMdCFF8X3cuz8uzp6heuwXG',
+    u1.role = 'USER',
+    u1.twoFactorEnabled = false;
 
 MERGE (u2:User {id: 'user-002'})
 SET u2.email = 'bob@neo4flix.dev',
-    u2.displayName = 'Bob';
+    u2.displayName = 'Bob',
+    u2.passwordHash = '$2a$10$Wpz7U5TuZqleLIA16du82.Lo4HwajwkMdCFF8X3cuz8uzp6heuwXG',
+    u2.role = 'USER',
+    u2.twoFactorEnabled = false;
 
 MERGE (u3:User {id: 'user-003'})
 SET u3.email = 'charlie@neo4flix.dev',
-    u3.displayName = 'Charlie';
+    u3.displayName = 'Charlie',
+    u3.passwordHash = '$2a$10$Wpz7U5TuZqleLIA16du82.Lo4HwajwkMdCFF8X3cuz8uzp6heuwXG',
+    u3.role = 'USER',
+    u3.twoFactorEnabled = false;
 
 // Genres
 MERGE (g1:Genre {id: 'genre-001'})
