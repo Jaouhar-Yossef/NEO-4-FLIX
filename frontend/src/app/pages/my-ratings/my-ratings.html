@@ -1,1 +1,34 @@
-<p>my-ratings works!</p>
+<h1>My ratings</h1>
+
+@if (error()) {
+  <p class="error" role="alert">{{ error() }}</p>
+} @else if (ratings(); as list) {
+  @if (list.length === 0) {
+    <p class="empty">You haven't rated any movies yet. <a routerLink="/">Browse movies</a></p>
+  } @else {
+    <ul class="ratings">
+      @for (r of list; track r.movie.id) {
+        <li>
+          <a class="title" [routerLink]="['/movies', r.movie.id]">{{ r.movie.title }}</a>
+          @if (r.movie.releaseYear) {
+            <span class="muted">({{ r.movie.releaseYear }})</span>
+          }
+          <div class="muted">{{ r.movie.genres.join(', ') }}</div>
+          <div>
+            <span class="stars" [attr.aria-label]="r.score + ' out of 5'">{{ stars(r.score) }}</span>
+            <span class="muted">
+              @if (r.movie.averageRating !== null) {
+                · average {{ r.movie.averageRating | number: '1.1-1' }} ({{ r.movie.ratingCount }})
+              }
+              @if (r.updatedAt) {
+                · {{ r.updatedAt | date: 'mediumDate' }}
+              }
+            </span>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+} @else {
+  <p>Loading…</p>
+}

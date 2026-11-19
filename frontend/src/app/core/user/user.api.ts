@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { API_BASE } from '../api';
-import { UpdateProfileRequest, UserProfile } from './user.models';
+import { MyRating, UpdateProfileRequest, UserProfile } from './user.models';
 
 /** docs/api.md §3: the logged-in user's own account. */
 @Injectable({ providedIn: 'root' })
@@ -17,6 +17,10 @@ export class UserApi {
 
   updateMe(body: UpdateProfileRequest): Observable<UserProfile> {
     return this.http.put<UserProfile>(this.base, body);
+  }
+
+  getMyRatings(): Observable<MyRating[]> {
+    return this.http.get<MyRating[]>(`${this.base}/ratings`);
   }
 
   deleteMe(): Observable<void> {
