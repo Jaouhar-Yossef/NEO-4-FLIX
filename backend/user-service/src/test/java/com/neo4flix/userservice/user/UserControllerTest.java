@@ -11,6 +11,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.ZonedDateTime;
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -96,6 +99,28 @@ class UserControllerTest {
 				.content("{\"displayName\":\"" + "a".repeat(51) + "\"}"))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.detail").value("displayName must be at most 50 characters"));
+	}
+
+	@Test
+	void ratingsNeedToken() throws Exception {
+		mvc.perform(get("/users/me/ratings")).andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void ratingsReturnContractShape() throws Exception {
+		MovieSummary matrix = new MovieSummary("movie-001", "The Matrix", 1999, List.of("Science Fiction"), 4.5, 2);
+		when(userService.getRatings("user-1")).thenReturn(List.of(
+				new MyRatingResponse(matrix, 5, ZonedDateTime.parse("2026-11-15T10:00:00Z"))));
+		mvc.perform(get("/users/me/ratings").header("Authorization", bearer()))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$[0].movie.id").value("movie-001"))
+				.andExpect(jsonPath("$[0].movie.title").value("The Matrix"))
+				.andExpect(jsonPath("$[0].movie.releaseYear").value(1999))
+				.andExpect(jsonPath("$[0].movie.genres[0]").value("Science Fiction"))
+				.andExpect(jsonPath("$[0].movie.averageRating").value(4.5))
+				.andExpect(jsonPath("$[0].movie.ratingCount").value(2))
+				.andExpect(jsonPath("$[0].score").value(5))
+				.andExpect(jsonPath("$[0].updatedAt").value("2026-11-15T10:00:00Z"));
 	}
 
 	@Test

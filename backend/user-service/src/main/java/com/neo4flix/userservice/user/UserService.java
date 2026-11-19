@@ -1,5 +1,7 @@
 package com.neo4flix.userservice.user;
 
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
@@ -13,6 +15,7 @@ import com.neo4flix.userservice.user.UserDtos.*;
 public class UserService {
 
 	private final UserRepository users;
+	private final RatingHistoryRepository ratingHistory;
 
 	public ProfileResponse getProfile(String userId) {
 		return ProfileResponse.of(currentUser(userId));
@@ -22,6 +25,10 @@ public class UserService {
 		User user = currentUser(userId);
 		user.setDisplayName(req.displayName().trim());
 		return ProfileResponse.of(users.save(user));
+	}
+
+	public List<MyRatingResponse> getRatings(String userId) {
+		return ratingHistory.findByUser(userId);
 	}
 
 	public void deleteAccount(String userId) {

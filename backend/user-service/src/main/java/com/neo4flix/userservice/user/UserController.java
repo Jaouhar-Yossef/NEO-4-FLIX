@@ -1,5 +1,7 @@
 package com.neo4flix.userservice.user;
 
+import java.util.List;
+
 import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,11 @@ public class UserController {
 	@PutMapping
 	public ProfileResponse update(@AuthenticationPrincipal String userId, @Valid @RequestBody UpdateProfileRequest body) {
 		return userService.updateProfile(userId, body);
+	}
+
+	@GetMapping("/ratings")
+	public List<MyRatingResponse> ratings(@AuthenticationPrincipal String userId) {
+		return userService.getRatings(userId);
 	}
 
 	@DeleteMapping

@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,8 @@ import com.neo4flix.userservice.user.UserDtos.*;
 class UserServiceTest {
 
 	private final UserRepository users = mock(UserRepository.class);
-	private final UserService service = new UserService(users);
+	private final RatingHistoryRepository ratingHistory = mock(RatingHistoryRepository.class);
+	private final UserService service = new UserService(users, ratingHistory);
 
 	@Test
 	void updateTrimsDisplayName() {
@@ -39,6 +41,14 @@ class UserServiceTest {
 		assertThatThrownBy(() -> service.getProfile("gone"))
 				.isInstanceOf(ResponseStatusException.class)
 				.hasMessageContaining("404");
+	}
+
+	@Test
+	void ratingsComeFromRatingHistory() {
+		when(ratingHistory.findByUser("user-1")).thenReturn(List.of());
+
+		assertThat(service.getRatings("user-1")).isEmpty();
+		verify(ratingHistory).findByUser("user-1");
 	}
 
 	@Test
