@@ -5,15 +5,15 @@
 // Users
 MERGE (u1:User {id: 'user-001'})
 SET u1.email = 'alice@neo4flix.dev',
-    u1.name = 'Alice';
+    u1.displayName = 'Alice';
 
 MERGE (u2:User {id: 'user-002'})
 SET u2.email = 'bob@neo4flix.dev',
-    u2.name = 'Bob';
+    u2.displayName = 'Bob';
 
 MERGE (u3:User {id: 'user-003'})
 SET u3.email = 'charlie@neo4flix.dev',
-    u3.name = 'Charlie';
+    u3.displayName = 'Charlie';
 
 // Genres
 MERGE (g1:Genre {id: 'genre-001'})
