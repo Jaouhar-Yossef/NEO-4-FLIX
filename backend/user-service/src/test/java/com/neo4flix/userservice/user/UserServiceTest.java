@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -38,5 +39,12 @@ class UserServiceTest {
 		assertThatThrownBy(() -> service.getProfile("gone"))
 				.isInstanceOf(ResponseStatusException.class)
 				.hasMessageContaining("404");
+	}
+
+	@Test
+	void deleteRemovesUserWithRelationships() {
+		service.deleteAccount("user-1");
+
+		verify(users).deleteWithRelationships("user-1");
 	}
 }

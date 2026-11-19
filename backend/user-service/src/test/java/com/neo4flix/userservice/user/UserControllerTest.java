@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -95,5 +96,18 @@ class UserControllerTest {
 				.content("{\"displayName\":\"" + "a".repeat(51) + "\"}"))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.detail").value("displayName must be at most 50 characters"));
+	}
+
+	@Test
+	void deleteNeedsToken() throws Exception {
+		mvc.perform(delete("/users/me")).andExpect(status().isUnauthorized());
+		verify(userService, never()).deleteAccount(any());
+	}
+
+	@Test
+	void deleteRemovesTokenOwnerAndGives204() throws Exception {
+		mvc.perform(delete("/users/me").header("Authorization", bearer()))
+				.andExpect(status().isNoContent());
+		verify(userService).deleteAccount("user-1");
 	}
 }

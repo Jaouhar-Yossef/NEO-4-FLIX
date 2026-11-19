@@ -86,6 +86,9 @@ code), `409` (2FA already on).
 
 ## 3. Users — `/api/users` (user-service)
 
+`/users/me` is always the token's user (`sub`). If that account no longer exists (deleted while
+the token is still valid), `GET` and `PUT /users/me` answer `404`.
+
 ### GET `/api/users/me` — JWT
 → `200` `{ "id": "…", "email": "alice@example.com", "displayName": "Alice", "twoFactorEnabled": false }`
 
@@ -93,7 +96,8 @@ code), `409` (2FA already on).
 `{ "displayName": "Alice B." }` → `200` updated user. Errors: `400`.
 
 ### DELETE `/api/users/me` — JWT
-→ `204`. Deletes the user and all their relationships.
+→ `204`. Deletes the user and all their relationships. Calling it again is fine (`204`, not
+`404`). The JWT stays valid until it expires, so the frontend drops it right away.
 
 ### GET `/api/users/me/ratings` — JWT
 The user's rating history (the brief puts it in the User service).

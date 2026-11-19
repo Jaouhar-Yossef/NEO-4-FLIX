@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,5 +25,11 @@ public class UserController {
 	@PutMapping
 	public ProfileResponse update(@AuthenticationPrincipal String userId, @Valid @RequestBody UpdateProfileRequest body) {
 		return userService.updateProfile(userId, body);
+	}
+
+	@DeleteMapping
+	public ResponseEntity<Void> delete(@AuthenticationPrincipal String userId) {
+		userService.deleteAccount(userId);
+		return ResponseEntity.noContent().build();
 	}
 }

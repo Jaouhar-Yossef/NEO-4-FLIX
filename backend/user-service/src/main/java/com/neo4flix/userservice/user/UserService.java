@@ -24,6 +24,10 @@ public class UserService {
 		return ProfileResponse.of(users.save(user));
 	}
 
+	public void deleteAccount(String userId) {
+		users.deleteWithRelationships(userId);
+	}
+
 	private User currentUser(String userId) {
 		return users.findById(userId)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "user not found"));
