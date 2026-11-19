@@ -15,7 +15,10 @@ The gateway strips `/api` and forwards by prefix:
 
 **Auth.**
 - Login returns one JWT (HS256, signed with `JWT_SECRET` from `.env`, valid
-  `JWT_EXPIRATION_MS` = 1 h). Claims: `sub` (user id), `email`, `role` (`USER` or `ADMIN`).
+  `JWT_EXPIRATION_MS` = 1 h). Claims: `sub` (user id), `email`, `role` (`USER` or `ADMIN`),
+  `type` = `access`.
+- The 2FA `tempToken` is also a JWT, with `type` = `2fa`. **Every service must reject a token
+  whose `type` is not `access`**, otherwise the temp token would open the API before the code.
 - The frontend sends it as `Authorization: Bearer <token>` and keeps it in `sessionStorage`.
 - Every service checks the signature and expiry with the same secret.
 - **Every endpoint needs the JWT**, except register, login and 2FA verify.
@@ -44,8 +47,8 @@ All Cypher uses parameters (no string concatenation), so search input can't chan
 ## 2. Auth — `/api/auth` (user-service)
 
 **Password policy** (checked by the backend, shown live by the register form): at least 8
-characters, with an uppercase letter, a lowercase letter, a digit and a symbol. Stored as a
-BCrypt hash.
+characters, with an uppercase letter, a lowercase letter, a digit and a symbol (= any character
+that is not a letter or digit). At most 72 bytes (BCrypt limit). Stored as a BCrypt hash.
 
 ### POST `/api/auth/register` — no JWT
 ```json
@@ -73,11 +76,13 @@ Second login step when 2FA is on.
 Turns 2FA on, step 1. The backend creates a TOTP secret (authenticator app, e.g. Google
 Authenticator).
 → `200` `{ "otpauthUri": "otpauth://totp/Neo4flix:alice@example.com?secret=…&issuer=Neo4flix" }`
-The frontend shows it as a QR code.
+The frontend shows the setup key for manual entry (no QR code, see NEO-10).
+Errors: `409` (2FA already on).
 
 ### POST `/api/auth/2fa/enable` — JWT
 Turns 2FA on, step 2: proves the app was set up.
-`{ "code": "123456" }` → `204`. Errors: `400`, `401` (wrong code).
+`{ "code": "123456" }` → `204`. Errors: `400` (bad format, or `setup` not called), `401` (wrong
+code), `409` (2FA already on).
 
 ## 3. Users — `/api/users` (user-service)
 
