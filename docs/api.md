@@ -17,11 +17,16 @@ The gateway strips `/api` and forwards by prefix:
 - Login returns one JWT (HS256, signed with `JWT_SECRET` from `.env`, valid
   `JWT_EXPIRATION_MS` = 1 h). Claims: `sub` (user id), `email`, `role` (`USER` or `ADMIN`),
   `type` = `access`.
-- The 2FA `tempToken` is also a JWT, with `type` = `2fa`. **Every service must reject a token
+- The 2FA `tempToken` is also a JWT, with `type` = `2fa`. **The gateway rejects a token
   whose `type` is not `access`**, otherwise the temp token would open the API before the code.
 - The frontend sends it as `Authorization: Bearer <token>` and keeps it in `sessionStorage`.
-- Every service checks the signature and expiry with the same secret.
+- **The gateway checks the JWT** (signature, expiry, `type`) with `JWT_SECRET`, then forwards
+  `X-User-Id` (`sub`), `X-User-Email` and `X-User-Role` to the service. It removes any
+  `X-User-*` header sent by the client. Services trust these headers and are only reachable
+  through the gateway (never published outside Docker).
 - **Every endpoint needs the JWT**, except register, login and 2FA verify.
+- `POST` / `PUT` / `DELETE` on `/api/movies/**` need role `ADMIN` (checked at the gateway, `403`).
+- If a service is down, the gateway returns `503` (ProblemDetail).
 - No refresh token: when the token expires the API returns `401` and the app goes back to login.
   Logout = the frontend deletes the token.
 
