@@ -99,7 +99,7 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
 		}
 	}
 
-	private Mono<Void> problem(ServerHttpResponse response, HttpStatus status, String detail) {
+	static Mono<Void> problem(ServerHttpResponse response, HttpStatus status, String detail) {
 		response.setStatusCode(status);
 		response.getHeaders().set(HttpHeaders.CONTENT_TYPE, "application/problem+json");
 		String body = "{\"status\":" + status.value() + ",\"title\":\"" + status.getReasonPhrase()

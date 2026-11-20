@@ -3,6 +3,39 @@ spring:
     name: api-gateway
   profiles:
     default: dev
+  # Shared by dev and prod. Defaults = local dev ports; Docker sets the *_SERVICE_URL vars.
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: user-service
+              uri: ${USER_SERVICE_URL:http://localhost:8081}
+              predicates:
+                - Path=/api/users/**,/api/auth/**
+              filters:
+                - StripPrefix=1
+
+            - id: movie-service
+              uri: ${MOVIE_SERVICE_URL:http://localhost:8182}
+              predicates:
+                - Path=/api/movies/**
+              filters:
+                - StripPrefix=1
+
+            - id: rating-service
+              uri: ${RATING_SERVICE_URL:http://localhost:8083}
+              predicates:
+                - Path=/api/ratings/**
+              filters:
+                - StripPrefix=1
+
+            - id: recommendation-service
+              uri: ${RECOMMENDATION_SERVICE_URL:http://localhost:8084}
+              predicates:
+                - Path=/api/recommendations/**
+              filters:
+                - StripPrefix=1
 
 management:
   endpoints:
