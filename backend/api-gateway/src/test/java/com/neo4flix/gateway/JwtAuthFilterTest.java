@@ -3,6 +3,7 @@ package com.neo4flix.gateway;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
@@ -194,6 +195,16 @@ class JwtAuthFilterTest {
 				.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken("USER"))
 				.exchange()
 				.expectStatus().isForbidden();
+	}
+
+	@Test
+	void userCannotPostMovieWithMatrixParameter() {
+		for (String path : new String[] { "/api/movies;x=1", "/api/movies;", "/api/movies/42;x=1" }) {
+			client.post().uri(URI.create("http://localhost:" + port + path))
+					.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken("USER"))
+					.exchange()
+					.expectStatus().isForbidden();
+		}
 	}
 
 	@Test

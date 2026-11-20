@@ -23,6 +23,8 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.util.pattern.PathPattern;
+import org.springframework.web.util.pattern.PathPatternParser;
 
 import reactor.core.publisher.Mono;
 
@@ -31,6 +33,8 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
 
 	private static final List<String> PUBLIC_POST_PATHS = List.of(
 			"/api/auth/register", "/api/auth/login", "/api/auth/2fa/verify");
+
+	private static final PathPattern MOVIES = PathPatternParser.defaultInstance.parse("/api/movies/**");
 
 	private final SecretKey key;
 
@@ -71,7 +75,9 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
 		}
 
 		String role = claims.get("role", String.class);
-		boolean writesMovies = (path.equals("/api/movies") || path.startsWith("/api/movies/"))
+		// Same matcher as the route predicate: a string check would miss /api/movies;x=1,
+		// which the route still forwards and movie-service reads as /movies.
+		boolean writesMovies = MOVIES.matches(request.getPath().pathWithinApplication())
 				&& (method == HttpMethod.POST || method == HttpMethod.PUT || method == HttpMethod.DELETE);
 		if (writesMovies && !"ADMIN".equals(role)) {
 			return problem(exchange.getResponse(), HttpStatus.FORBIDDEN, "admin role required");
