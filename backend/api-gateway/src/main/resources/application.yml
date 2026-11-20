@@ -3,6 +3,47 @@ spring:
     name: api-gateway
   profiles:
     default: dev
+  cloud:
+    gateway:
+      server:
+        webflux:
+          # Only the Angular app's origin. No credentials: the JWT is sent in a header, not a cookie.
+          globalcors:
+            cors-configurations:
+              '[/api/**]':
+                allowed-origins: ${FRONTEND_ORIGIN:http://localhost:4200}
+                allowed-methods: GET,POST,PUT,DELETE
+                allowed-headers: Authorization,Content-Type
+                max-age: 3600
+          # Shared by dev and prod. Defaults = local dev ports; Docker sets the *_SERVICE_URL vars.
+          routes:
+            - id: user-service
+              uri: ${USER_SERVICE_URL:http://localhost:8081}
+              predicates:
+                - Path=/api/users/**,/api/auth/**
+              filters:
+                - StripPrefix=1
+
+            - id: movie-service
+              uri: ${MOVIE_SERVICE_URL:http://localhost:8182}
+              predicates:
+                - Path=/api/movies/**
+              filters:
+                - StripPrefix=1
+
+            - id: rating-service
+              uri: ${RATING_SERVICE_URL:http://localhost:8083}
+              predicates:
+                - Path=/api/ratings/**
+              filters:
+                - StripPrefix=1
+
+            - id: recommendation-service
+              uri: ${RECOMMENDATION_SERVICE_URL:http://localhost:8084}
+              predicates:
+                - Path=/api/recommendations/**
+              filters:
+                - StripPrefix=1
 
 management:
   endpoints:
@@ -21,3 +62,7 @@ info:
     name: api-gateway
     description: Neo4flix API Gateway
     version: 1.0.0
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
