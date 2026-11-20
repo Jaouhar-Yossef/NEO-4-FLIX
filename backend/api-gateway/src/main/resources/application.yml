@@ -21,3 +21,7 @@ info:
     name: api-gateway
     description: Neo4flix API Gateway
     version: 1.0.0
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
