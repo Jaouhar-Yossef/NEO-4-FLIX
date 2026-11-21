@@ -77,8 +77,10 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
 		String role = claims.get("role", String.class);
 		// Same matcher as the route predicate: a string check would miss /api/movies;x=1,
 		// which the route still forwards and movie-service reads as /movies.
+		// Allow-list of read methods: a deny-list of write methods let PATCH through.
+		// CORS preflight (OPTIONS) never gets here: the CORS filter answers it first.
 		boolean writesMovies = MOVIES.matches(request.getPath().pathWithinApplication())
-				&& (method == HttpMethod.POST || method == HttpMethod.PUT || method == HttpMethod.DELETE);
+				&& method != HttpMethod.GET && method != HttpMethod.HEAD;
 		if (writesMovies && !"ADMIN".equals(role)) {
 			return problem(exchange.getResponse(), HttpStatus.FORBIDDEN, "admin role required");
 		}

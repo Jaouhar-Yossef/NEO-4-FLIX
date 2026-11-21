@@ -198,6 +198,15 @@ class JwtAuthFilterTest {
 	}
 
 	@Test
+	void userCannotPatchMovie() {
+		client.patch().uri("/api/movies/42")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken("USER"))
+				.exchange()
+				.expectStatus().isForbidden()
+				.expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON);
+	}
+
+	@Test
 	void userCannotPostMovieWithMatrixParameter() {
 		for (String path : new String[] { "/api/movies;x=1", "/api/movies;", "/api/movies/42;x=1" }) {
 			client.post().uri(URI.create("http://localhost:" + port + path))

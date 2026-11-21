@@ -7,6 +7,11 @@ spring:
     gateway:
       server:
         webflux:
+          # Without these, a stuck service holds the request forever (no response timeout)
+          # and an unreachable one takes 30 s (Netty's connect default). Timeout -> 504.
+          httpclient:
+            connect-timeout: 2000 # ms
+            response-timeout: 10s
           # Only the Angular app's origin. No credentials: the JWT is sent in a header, not a cookie.
           globalcors:
             cors-configurations:

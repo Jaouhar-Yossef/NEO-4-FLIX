@@ -1,0 +1,7 @@
+# Only pom.xml and src/ are needed: the image builds its own target/.
+target/
+.idea/
+.vscode/
+*.iml
+.env
+.env.*

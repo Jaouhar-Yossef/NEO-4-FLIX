@@ -4,7 +4,12 @@
 
 This guide explains how to activate and use the Neo4j database in the NEO-4-FLIX project.
 
-The project uses **Neo4j 5 Community Edition** as its primary database.
+To run the whole application in Docker, follow the [README](../../README.md) instead: the
+`neo4j-init` container loads the schema and the demo data by itself. This guide is for
+local development, with the services run by Maven.
+
+The project uses **Neo4j 5 Community Edition** (`neo4j:5.26.33-community`) with the
+**Graph Data Science** plugin (GDS 2.13) as its primary database.
 
 The database stores:
 - Users
@@ -71,7 +76,8 @@ Check the container:
 docker compose ps
 ```
 
-Wait until the container status becomes `healthy`.
+Wait until the container status becomes `healthy`. The first start also downloads the GDS
+plugin (internet needed). Check it in Neo4j Browser with `RETURN gds.version();`.
 
 The database exposes these local ports:
 
@@ -117,7 +123,7 @@ Load the schema from the project root:
 
 ```bash
 set -a
-source .env
+source ./.env   # "./" matters: a bare ".env" is looked up in $PATH first
 set +a
 
 docker exec -i neo4flix-neo4j cypher-shell \
@@ -146,6 +152,24 @@ docker exec -i neo4flix-neo4j cypher-shell \
 ```
 
 The seed script uses `MERGE` to avoid creating duplicate nodes and relationships when executed repeatedly.
+
+The seed users (`alice@neo4flix.dev`, `bob@neo4flix.dev`, `charlie@neo4flix.dev`) share a
+known password, written in the script. That is why `02-seed-data.cypher` is for local
+development only and is never loaded in Docker.
+
+### Demo data (loaded automatically in Docker)
+
+`scripts/neo4j/03-demo-data.cypher` holds the larger data set used in Docker: 10 genres,
+50 movies, 20 demo users in 4 taste groups (no password, nobody can log in as them) and
+their ratings. The `neo4j-init` container loads `01-schema.cypher` and this script on every
+`docker compose up`. To load both locally without the rest of the stack:
+
+```bash
+docker compose up neo4j-init
+```
+
+It uses the same ids as `02-seed-data.cypher` for the first 3 genres and movies, so both
+scripts can be loaded in the same database without duplicates.
 
 ## 9. Understand the graph model
 
@@ -339,7 +363,8 @@ The normal development startup sequence is:
 
 1. Start Docker.
 2. Start Neo4j using `docker compose up -d neo4j`.
-3. Load the schema if the database has not been initialized.
+3. Load the schema if the database has not been initialized (or `docker compose up neo4j-init`,
+   which loads the schema and the demo data).
 4. Load the development seed data if sample data is needed.
 5. Start the Spring Boot services.
 6. Verify the database connection through Actuator.
