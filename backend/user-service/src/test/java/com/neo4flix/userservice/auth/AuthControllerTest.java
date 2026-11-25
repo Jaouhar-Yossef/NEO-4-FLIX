@@ -68,20 +68,21 @@ class AuthControllerTest {
     }
 
     @Test
-    void twoFactorTempTokenCannotCallProtectedEndpoints() throws Exception {
+    void bearerTokenWithoutGatewayHeadersGives401() throws Exception {
         User u = new User();
         u.setId("user-1");
-        mvc.perform(post("/auth/2fa/setup").header("Authorization", "Bearer " + jwtService.createTwoFactorToken(u)))
+        u.setEmail("a@b.c");
+        mvc.perform(post("/auth/2fa/setup").header("Authorization", "Bearer " + jwtService.createAccessToken(u)))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void setupWorksWithAccessToken() throws Exception {
-        User u = new User();
-        u.setId("user-1");
-        u.setEmail("a@b.c");
+    void setupWorksWithGatewayHeaders() throws Exception {
         when(authService.setupTwoFactor("user-1")).thenReturn(new AuthDtos.TwoFactorSetupResponse("otpauth://totp/x"));
-        mvc.perform(post("/auth/2fa/setup").header("Authorization", "Bearer " + jwtService.createAccessToken(u)))
+        mvc.perform(post("/auth/2fa/setup")
+                        .header("X-User-Id", "user-1")
+                        .header("X-User-Email", "a@b.c")
+                        .header("X-User-Role", "USER"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.otpauthUri").value("otpauth://totp/x"));
     }

@@ -1,6 +1,20 @@
+# Neo4flix: whole stack. Start: docker compose up -d --build. Stop: docker compose down.
+# Values come from .env (see .env.example). Only nginx (frontend) is published; Neo4j is
+# published on 127.0.0.1 only, for the Neo4j Browser (ADR 0001).
+# Backend services must never get a "ports:" entry: they trust the X-User-* headers.
+
+# Same health check for every Spring Boot service (curl is in the Temurin JRE image).
+x-spring-healthcheck: &spring-healthcheck
+  test: ["CMD-SHELL", "curl -fs http://localhost:8080/actuator/health || exit 1"]
+  interval: 10s
+  timeout: 5s
+  retries: 10
+  start_period: 30s
+
 services:
   neo4j:
-    image: neo4j:5-community
+    # Exact patch, not "5": a rebuild must not change the database version.
+    image: neo4j:5.26.33-community
     container_name: neo4flix-neo4j
     restart: unless-stopped
 
@@ -10,6 +24,10 @@ services:
 
     environment:
       NEO4J_AUTH: "${NEO4J_USERNAME:-neo4j}/${NEO4J_PASSWORD:?NEO4J_PASSWORD is required}"
+      # GDS for recommendations (NEO-06). The value must be a JSON list with double quotes
+      # inside; ['graph-data-science'] is not valid JSON and the plugin does not load.
+      # Downloaded at first start of the container; check with RETURN gds.version();
+      NEO4J_PLUGINS: '["graph-data-science"]'
 
     volumes:
       - neo4j_data:/data
@@ -22,7 +40,130 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 40s
+      # Longer than before: the first start also downloads the GDS plugin.
+      start_period: 60s
+
+  # One-shot: loads the schema and the demo data into Neo4j, then exits. Runs on every
+  # "up"; the scripts are safe to run again (IF NOT EXISTS, MERGE).
+  neo4j-init:
+    # Same image as the database, only for its cypher-shell.
+    image: neo4j:5.26.33-community
+    user: neo4j
+    entrypoint:
+      - sh
+      - -c
+      - cypher-shell -f /scripts/01-schema.cypher && cypher-shell -f /scripts/03-demo-data.cypher
+    environment:
+      # Read by cypher-shell, so the password is not on the command line.
+      NEO4J_ADDRESS: bolt://neo4j:7687
+      NEO4J_USERNAME: ${NEO4J_USERNAME:-neo4j}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:?NEO4J_PASSWORD is required}
+    volumes:
+      - ./scripts/neo4j:/scripts:ro
+    restart: "no"
+    depends_on:
+      neo4j:
+        condition: service_healthy
+
+  user-service:
+    build: ./backend/user-service
+    restart: unless-stopped
+    environment:
+      # Set here, not taken from .env (which has "dev" for local mvn runs).
+      SPRING_PROFILES_ACTIVE: prod
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USERNAME: ${NEO4J_USERNAME:-neo4j}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:?NEO4J_PASSWORD is required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-3600000}
+    healthcheck: *spring-healthcheck
+    # Starts once the schema is in (neo4j-init needs a healthy neo4j first).
+    depends_on:
+      neo4j-init:
+        condition: service_completed_successfully
+
+  movie-service:
+    build: ./backend/movie-service
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USERNAME: ${NEO4J_USERNAME:-neo4j}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:?NEO4J_PASSWORD is required}
+    healthcheck: *spring-healthcheck
+    # Starts once the schema is in (neo4j-init needs a healthy neo4j first).
+    depends_on:
+      neo4j-init:
+        condition: service_completed_successfully
+
+  rating-service:
+    build: ./backend/rating-service
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USERNAME: ${NEO4J_USERNAME:-neo4j}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:?NEO4J_PASSWORD is required}
+    healthcheck: *spring-healthcheck
+    # Starts once the schema is in (neo4j-init needs a healthy neo4j first).
+    depends_on:
+      neo4j-init:
+        condition: service_completed_successfully
+
+  recommendation-service:
+    build: ./backend/recommendation-service
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USERNAME: ${NEO4J_USERNAME:-neo4j}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:?NEO4J_PASSWORD is required}
+    healthcheck: *spring-healthcheck
+    # Starts once the schema is in (neo4j-init needs a healthy neo4j first).
+    depends_on:
+      neo4j-init:
+        condition: service_completed_successfully
+
+  api-gateway:
+    build: ./backend/api-gateway
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      # Docker service names; every service listens on 8080 inside its container.
+      USER_SERVICE_URL: http://user-service:8080
+      MOVIE_SERVICE_URL: http://movie-service:8080
+      RATING_SERVICE_URL: http://rating-service:8080
+      RECOMMENDATION_SERVICE_URL: http://recommendation-service:8080
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:4200}
+    healthcheck: *spring-healthcheck
+    depends_on:
+      user-service:
+        condition: service_healthy
+      movie-service:
+        condition: service_healthy
+      rating-service:
+        condition: service_healthy
+      recommendation-service:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    # The only published container: the app and /api on one origin.
+    ports:
+      - "${FRONTEND_PORT:-4200}:80"
+    healthcheck:
+      # busybox wget is in the nginx alpine image. 127.0.0.1, not localhost: in alpine
+      # localhost is ::1 (IPv6) and nginx listens on IPv4 only.
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # nginx resolves "api-gateway" at startup, so the gateway must exist first.
+    depends_on:
+      api-gateway:
+        condition: service_healthy
 
 volumes:
   neo4j_data:
