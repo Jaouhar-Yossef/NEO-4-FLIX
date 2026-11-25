@@ -6,6 +6,7 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.neo4flix.movieservice.movie.dto.MovieDetailsRecord;
 import com.neo4flix.movieservice.movie.dto.MovieSearchRecord;
 
 public interface MovieRepository extends Neo4jRepository<Movie, String> {
@@ -22,36 +23,55 @@ public interface MovieRepository extends Neo4jRepository<Movie, String> {
                     }
               )
 
-            CALL {
-                WITH m
+            WITH m
+            ORDER BY
+                CASE WHEN $sortBy = 'title' AND $direction = 'ASC'
+                     THEN toLower(m.title) END ASC,
+                CASE WHEN $sortBy = 'title' AND $direction = 'DESC'
+                     THEN toLower(m.title) END DESC,
+                CASE WHEN $sortBy = 'releaseYear' AND $direction = 'ASC'
+                     THEN m.releaseYear END ASC,
+                CASE WHEN $sortBy = 'releaseYear' AND $direction = 'DESC'
+                     THEN m.releaseYear END DESC,
+                m.id ASC
+
+            SKIP $skip
+            LIMIT $limit
+
+            WITH collect(m) AS pageMovies
+            UNWIND CASE
+                WHEN size(pageMovies) = 0 THEN []
+                ELSE range(0, size(pageMovies) - 1)
+            END AS position
+
+            WITH pageMovies[position] AS m, position
+
+            OPTIONAL MATCH (m)-[:HAS_GENRE]->(g:Genre)
+
+            CALL (m) {
                 OPTIONAL MATCH (:User)-[r:RATED]->(m)
                 RETURN avg(r.rating) AS averageRating,
                        count(r) AS ratingCount
             }
 
-            OPTIONAL MATCH (m)-[:HAS_GENRE]->(g:Genre)
-
-            WITH m, averageRating, ratingCount,
-                 collect(DISTINCT g.name) AS genres
+            WITH m, position, g.name AS genre, averageRating, ratingCount
+            ORDER BY position ASC, genre ASC
 
             RETURN m.id AS id,
                    m.title AS title,
                    m.releaseYear AS releaseYear,
-                   genres AS genres,
+                   genre AS genre,
                    averageRating AS averageRating,
                    ratingCount AS ratingCount
-
-            ORDER BY m.title ASC, m.id ASC
-            SKIP $skip
-            LIMIT $limit
             """)
     List<MovieSearchRecord> searchMovies(
             @Param("title") String title,
             @Param("genre") String genre,
             @Param("year") Integer year,
+            @Param("sortBy") String sortBy,
+            @Param("direction") String direction,
             @Param("skip") int skip,
-            @Param("limit") int limit
-    );
+            @Param("limit") int limit);
 
     @Query("""
             MATCH (m:Movie)
@@ -69,9 +89,44 @@ public interface MovieRepository extends Neo4jRepository<Movie, String> {
     long countMovies(
             @Param("title") String title,
             @Param("genre") String genre,
-            @Param("year") Integer year
-    );
+            @Param("year") Integer year);
 
     @Query("MATCH (m:Movie {id: $id}) DETACH DELETE m")
     void deleteWithRelationships(String id);
+
+    @Query("""
+            MATCH (m:Movie {id: $id})
+
+            OPTIONAL MATCH (m)-[:HAS_GENRE]->(g:Genre)
+
+            CALL (m) {
+                OPTIONAL MATCH (:User)-[r:RATED]->(m)
+                RETURN avg(r.rating) AS averageRating,
+                       count(r) AS ratingCount
+            }
+
+            CALL (m) {
+                OPTIONAL MATCH (u:User {id: $userId})-[r:RATED]->(m)
+                RETURN collect(r.rating)[0] AS myRating
+            }
+
+            CALL (m) {
+                OPTIONAL MATCH (u:User {id: $userId})-[w:WATCHLIST]->(m)
+                RETURN count(w) > 0 AS inWatchlist
+            }
+
+            RETURN m.id AS id,
+                   m.title AS title,
+                   m.releaseYear AS releaseYear,
+                   g.name AS genre,
+                   averageRating AS averageRating,
+                   ratingCount AS ratingCount,
+                   myRating AS myRating,
+                   inWatchlist AS inWatchlist
+
+            ORDER BY genre ASC
+            """)
+    List<MovieDetailsRecord> findMovieDetails(
+            @Param("id") String id,
+            @Param("userId") String userId);
 }
