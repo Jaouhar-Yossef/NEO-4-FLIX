@@ -25,7 +25,7 @@ The gateway strips `/api` and forwards by prefix:
   `X-User-*` header sent by the client. Services trust these headers and are only reachable
   through the gateway (never published outside Docker).
 - **Every endpoint needs the JWT**, except register, login and 2FA verify.
-- `POST` / `PUT` / `DELETE` on `/api/movies/**` need role `ADMIN` (checked at the gateway, `403`).
+- Every method except `GET` / `HEAD` on `/api/movies/**` needs role `ADMIN` (checked at the gateway, `403`).
 - If a service is down, the gateway returns `503` (ProblemDetail).
 - No refresh token: when the token expires the API returns `401` and the app goes back to login.
   Logout = the frontend deletes the token.
