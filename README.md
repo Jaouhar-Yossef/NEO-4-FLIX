@@ -98,6 +98,7 @@ to the gateway on 8080).
 ## Docs
 
 - [API contract](docs/api.md)
+- [Backend automated testing](docs/TESTING.md)
 - [Graph model](docs/database/neo4j-graph-model.md)
 - [Neo4j setup and local development](docs/database/neo4j-setup-guide.md)
 - [ADR 0001: JWT checked at the gateway](docs/adr/0001-jwt-at-gateway.md)
