@@ -1,2 +1,58 @@
-<h1>Movie details</h1>
-<p>Placeholder for movie {{ id() }}.</p>
+<a class="back" routerLink="/" [queryParams]="{ page: backPage() }">‹ Back to movies</a>
+
+@if (loading()) {
+  <p>Loading…</p>
+} @else if (notFound()) {
+  <h1>Movie not found</h1>
+  <p class="muted">This movie does not exist or was removed. <a routerLink="/">Go to the home page</a></p>
+} @else if (error()) {
+  <p class="error" role="alert">{{ error() }}</p>
+} @else if (movie(); as m) {
+  <article class="details">
+    <h1>{{ m.title }}</h1>
+    <p class="muted">
+      @if (m.releaseYear) {
+        {{ m.releaseYear }} ·
+      }
+      {{ m.genres.join(', ') }}
+    </p>
+
+    <p class="average">
+      @if (m.averageRating !== null) {
+        <span class="star" aria-hidden="true">★</span>
+        {{ m.averageRating | number: '1.1-1' }}
+        <span class="muted">({{ m.ratingCount }} {{ m.ratingCount === 1 ? 'rating' : 'ratings' }})</span>
+      } @else {
+        <span class="muted">Not rated yet</span>
+      }
+    </p>
+
+    <section class="my-rating">
+      <h2>Your rating</h2>
+      <div class="stars" role="group" aria-label="Rate this movie from 1 to 5">
+        @for (s of stars; track s) {
+          <button
+            type="button"
+            [class.on]="m.myRating !== null && s <= m.myRating"
+            [attr.aria-pressed]="s === m.myRating"
+            [attr.aria-label]="s + ' out of 5'"
+            [disabled]="saving()"
+            (click)="rate(s)"
+          >★</button>
+        }
+      </div>
+      <p class="muted status">
+        @if (saving()) {
+          Saving…
+        } @else if (m.myRating !== null) {
+          You rated it {{ m.myRating }}/5.
+        } @else {
+          You haven't rated this movie yet.
+        }
+      </p>
+      @if (saveError()) {
+        <p class="error" role="alert">{{ saveError() }}</p>
+      }
+    </section>
+  </article>
+}
