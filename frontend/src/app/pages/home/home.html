@@ -1,1 +1,50 @@
-<p>home works!</p>
+<h1>Movies</h1>
+
+@if (loading()) {
+  <p>Loading…</p>
+} @else if (error()) {
+  <p class="error" role="alert">{{ error() }}</p>
+} @else if (result(); as r) {
+  @if (r.totalElements === 0) {
+    <p class="empty">No movies yet.</p>
+  } @else if (r.content.length === 0) {
+    <p class="empty">This page is empty. <a routerLink="/" [queryParams]="{ page: null }" queryParamsHandling="merge">Go to the first page</a></p>
+  } @else {
+    <ul class="grid">
+      @for (m of r.content; track m.id) {
+        <li>
+          <a class="card" [routerLink]="['/movies', m.id]">
+            <span class="title">{{ m.title }}</span>
+            @if (m.releaseYear) {
+              <span class="muted">{{ m.releaseYear }}</span>
+            }
+            <span class="muted">{{ m.genres.join(', ') }}</span>
+            @if (m.averageRating !== null) {
+              <span>
+                <span class="star" aria-hidden="true">★</span>
+                {{ m.averageRating | number: '1.1-1' }}
+                <span class="muted">({{ m.ratingCount }} {{ m.ratingCount === 1 ? 'rating' : 'ratings' }})</span>
+              </span>
+            } @else {
+              <span class="muted">Not rated</span>
+            }
+          </a>
+        </li>
+      }
+    </ul>
+
+    <nav class="pager" aria-label="Pages">
+      @if (page() > 1) {
+        <a routerLink="/" [queryParams]="{ page: page() - 1 }" queryParamsHandling="merge">‹ Previous</a>
+      } @else {
+        <span class="disabled">‹ Previous</span>
+      }
+      <span>Page {{ page() }} of {{ totalPages(r) }}</span>
+      @if (page() < totalPages(r)) {
+        <a routerLink="/" [queryParams]="{ page: page() + 1 }" queryParamsHandling="merge">Next ›</a>
+      } @else {
+        <span class="disabled">Next ›</span>
+      }
+    </nav>
+  }
+}
