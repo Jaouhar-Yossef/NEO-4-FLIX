@@ -3,7 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { MovieApi } from './movie.api';
-import { MoviePage } from './movie.models';
+import { MovieDetails, MoviePage } from './movie.models';
 
 const PAGE: MoviePage = {
   content: [
@@ -46,6 +46,32 @@ describe('MovieApi', () => {
     req.flush(PAGE);
 
     expect(result).toEqual(PAGE);
+  });
+
+  it('getById gets the movie by its encoded id', () => {
+    const details: MovieDetails = { ...PAGE.content[0], myRating: null, inWatchlist: false };
+    let result: MovieDetails | undefined;
+    api.getById('movie 005/x').subscribe((m) => (result = m));
+
+    const req = backend.expectOne('/api/movies/movie%20005%2Fx');
+    expect(req.request.method).toBe('GET');
+    req.flush(details);
+
+    expect(result).toEqual(details);
+  });
+
+  it('getById passes a 404 through', () => {
+    let status = 0;
+    api.getById('missing').subscribe({ error: (err) => (status = err.status) });
+
+    backend
+      .expectOne('/api/movies/missing')
+      .flush(
+        { status: 404, title: 'Movie Not Found', detail: 'Movie not found with id: missing' },
+        { status: 404, statusText: 'Not Found' },
+      );
+
+    expect(status).toBe(404);
   });
 
   it('list passes a ProblemDetail error through', () => {
