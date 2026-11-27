@@ -6,3 +6,10 @@ export interface MovieSummary {
   averageRating: number | null;
   ratingCount: number;
 }
+
+export interface MoviePage {
+  content: MovieSummary[];
+  page: number;
+  size: number;
+  totalElements: number;
+}
