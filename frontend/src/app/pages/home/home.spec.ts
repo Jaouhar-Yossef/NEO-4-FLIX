@@ -76,6 +76,13 @@ describe('Home', () => {
     expect(cards[1].textContent).toContain('Not rated');
   });
 
+  it('passes the current page to the details link, so its back link can return here', async () => {
+    await open('/?page=2', moviePage(1));
+
+    const card = el().querySelector<HTMLAnchorElement>('a.card');
+    expect(card?.getAttribute('href')).toBe('/movies/movie-001?page=2');
+  });
+
   it('reads ?page= as 1-based and asks the API for the 0-based page', async () => {
     expect(await open('/?page=2', moviePage(1))).toBe('1');
     expect(el().textContent).toContain('Page 2 of 3');

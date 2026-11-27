@@ -13,7 +13,8 @@
     <ul class="grid">
       @for (m of r.content; track m.id) {
         <li>
-          <a class="card" [routerLink]="['/movies', m.id]">
+          <!-- ?page= lets the details page link back to this page (page 1 = no param). -->
+          <a class="card" [routerLink]="['/movies', m.id]" [queryParams]="{ page: page() > 1 ? page() : null }">
             <span class="title">{{ m.title }}</span>
             @if (m.releaseYear) {
               <span class="muted">{{ m.releaseYear }}</span>
